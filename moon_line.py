@@ -3,8 +3,6 @@ import numpy as np
 import openpyxl
 from scipy.optimize import root
 
-cost = [59657, 21556, 340000, 1306000]
-
 def gen_p(mean, variance):
     """
     计算在支持集{0,1,2,3,4}上，满足总概率为1、期望为mean、方差为variance的最大熵分布。
@@ -43,7 +41,7 @@ def gen_p(mean, variance):
 
 # 返回给定4星5星月百日10线、模型倾向，计算资源的期望消耗量
 # 这里的线把转职加成和初始属性先抠了，最后一起加回来
-def sum_cost(四星线, 五星线, 月百线, 日十线, 期望, 方差):
+def sum_cost(四星线, 五星线, 月百线, 日十线, 期望, 方差, cost):
     resource_sum = 0
 
     # 100的位置是0属性对应的位置，这里错开的目的是统一迭代的表达式，加速计算
@@ -134,7 +132,7 @@ def sum_cost(四星线, 五星线, 月百线, 日十线, 期望, 方差):
     resource_sum /= rest_part
     return round(resource_sum)
 
-def optimize_lines(t, m, v):
+def optimize_lines(t, m, v, cost):
     """
     在 0 <= l1 <= l2 <= l3 <= t 范围内，寻找使 sum_cost(l1, l2, l3, t, m, v) 最小的整数组合。
     这里先根据比例（126/293, 185/293, 284/293）给出初始估计，然后采用多步长局部搜索优化。
@@ -148,7 +146,7 @@ def optimize_lines(t, m, v):
     l2 = max(l1, min(l2, t))
     l3 = max(l2, min(l3, t))
     
-    best_cost = sum_cost(l1, l2, l3, t, m, v)
+    best_cost = sum_cost(l1, l2, l3, t, m, v, cost)
     step = max(1, t // 10)  # 初始步长，可根据 t 调整
     
     while step > 0:
@@ -159,7 +157,7 @@ def optimize_lines(t, m, v):
             for delta in [-step, step]:
                 new_l1 = l1 + delta
                 if 0 <= new_l1 <= l2:
-                    c = sum_cost(new_l1, l2, l3, t, m, v)
+                    c = sum_cost(new_l1, l2, l3, t, m, v, cost)
                     if c < best_cost:
                         best_cost = c
                         l1 = new_l1
@@ -171,7 +169,7 @@ def optimize_lines(t, m, v):
             for delta in [-step, step]:
                 new_l2 = l2 + delta
                 if l1 <= new_l2 <= l3:
-                    c = sum_cost(l1, new_l2, l3, t, m, v)
+                    c = sum_cost(l1, new_l2, l3, t, m, v, cost)
                     if c < best_cost:
                         best_cost = c
                         l2 = new_l2
@@ -183,7 +181,7 @@ def optimize_lines(t, m, v):
             for delta in [-step, step]:
                 new_l3 = l3 + delta
                 if l2 <= new_l3 <= t:
-                    c = sum_cost(l1, l2, new_l3, t, m, v)
+                    c = sum_cost(l1, l2, new_l3, t, m, v, cost)
                     if c < best_cost:
                         best_cost = c
                         l3 = new_l3
@@ -203,26 +201,28 @@ def write_moon_line():
         m = row[3]       # 每级期望
         v = row[4]       # 每级方差
         f = row[10]      # 转职加成
-        for j in range(18, 38, 4):
-            print("    日十" + str(row[j]), end="")
+        for j in range(19, 44, 5):
             # 日十减去初始和转职部分
             t = row[j] - round(s) - f
 
+            # 分情况应用cost
+            cost = [52354, 16206, 226880, 928400]
+            if j < 25:
+                cost[0] = 85144
+                
             # 计算最合适的line取值
-            # ========================================================
-            line1, line2, line3 = optimize_lines(t, m, v)
-            cost = sum_cost(line1, line2, line3, t, m, v)
-            # ========================================================
+            line1, line2, line3 = optimize_lines(t, m, v, cost)
 
             line1 += round(s) + row[6]
             line2 += round(s) + row[6] + row[7]
             line3 += round(s) + row[6] + row[7] + int(row[8])
-            print("    月百" + str(line3), end="")
-            print("    五星" + str(line2), end="")
-            print("    四星" + str(line1), end="")
-            print("    资源消耗期望" + str(round(cost/10000)) + "w")
+            line1 = 5 * round(line1/5)
+            line2 = 5 * round(line2/5)
+            line3 = 5 * round(line3/5)
+            cost = sum_cost(line1- round(s) - row[6], line2 - round(s) - row[6] - row[7], line3-round(s) - row[6] - row[7] - int(row[8]), t, m, v, cost)
             ws.cell(row=i, column=j, value=line3)
             ws.cell(row=i, column=j-1, value=line2)
             ws.cell(row=i, column=j-2, value=line1)
+            ws.cell(row=i, column=j+2, value=round(cost/10000))
 
     wb.save(file_path)

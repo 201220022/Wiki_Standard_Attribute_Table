@@ -107,11 +107,11 @@ def write_sun_line():
         m = row[3] * 293 # 总体期望
         v = row[4] * 293 # 总体方差
         f = row[10]      # 转职加成
-        ws.cell(row=i, column=19, value=round(s + f + norm.ppf(1-0.1,      loc=m, scale=v**0.5)))
-        ws.cell(row=i, column=23, value=round(s + f + norm.ppf(1-0.05,     loc=m, scale=v**0.5)))
-        ws.cell(row=i, column=27, value=round(s + f + norm.ppf(1-0.01,     loc=m, scale=v**0.5)))
-        ws.cell(row=i, column=31, value=round(s + f + norm.ppf(1-0.0001,   loc=m, scale=v**0.5)))
-        ws.cell(row=i, column=35, value=round(s + f + norm.ppf(1-0.000001, loc=m, scale=v**0.5)))
+        ws.cell(row=i, column=20, value=5 * round((s + f + norm.ppf(1-0.1,      loc=m, scale=v**0.5)) / 5))
+        ws.cell(row=i, column=25, value=5 * round((s + f + norm.ppf(1-0.05,     loc=m, scale=v**0.5)) / 5))
+        ws.cell(row=i, column=30, value=5 * round((s + f + norm.ppf(1-0.01,     loc=m, scale=v**0.5)) / 5))
+        ws.cell(row=i, column=35, value=5 * round((s + f + norm.ppf(1-0.0001,   loc=m, scale=v**0.5)) / 5))
+        ws.cell(row=i, column=40, value=5 * round((s + f + norm.ppf(1-0.000001, loc=m, scale=v**0.5)) / 5))
     wb.save(file_path)
 
 def count_model():
