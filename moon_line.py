@@ -180,8 +180,8 @@ def write_moon_line():
     file_path = "属性表.xlsx"
     wb = openpyxl.load_workbook(file_path)
     ws = wb.active
-    for i, row in enumerate(ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True), start=3):
-        print("计算月百五星四星线: " + row[2] + " -> " + row[0])
+    for i, row in enumerate(ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True), start=first_row):
+        print("计算月百五星四星线: " + row[col["模型"]] + " -> " + row[col["职业"]])
         s = int(row[col["初始"]])
         f = int(row[col["总计"]])
         a4 = int(row[col["四星"]])
@@ -197,27 +197,58 @@ def write_moon_line():
         for typ in ["一般", "极品", "大极", "镇堡"]:
             # 日十减去初始和转职部分
             t = row[col[typ]] - s - f
-
+            target_loss = 3000000 if typ == "一般" else 10000000 if typ == "极品"  else 500000000 if typ == "大极" else 50000000000
             # 分情况应用cost
-            cost = [52354, 16206, 226880, 928400]
+            cost = [52354, 16206, 293096, 928400]
             if typ == "一般":
                 cost[0] = 85144
-                
+            if row[col["职业"]] in ["传奇法师", "圣龙将军", "狂战神", "烈枪侠", "教宗", "夜莺"]:
+                cost[2] = 226880
+            old_loss = 0
+            status = ""
+            print("===========================================")
+            # 调日10线。
+            while True:
+                # 计算最合适的line取值
+                line1, line2, line3 = optimize_lines(t, p, cost)
+                line1 += s + a4
+                line2 += s + a4 + a5
+                line3 += s + a4 + a5 + am
+                line1 = 5 * round(line1/5)
+                line2 = 5 * round(line2/5)
+                loss = sum_cost(line1 - s - a4, line2 - s - a4 - a5, line3 - s - a4 - a5 - am, t, p, cost)
+                print(t+s+f,line3,line2,line1,loss)
+                if loss < target_loss:
+                    if status == "larger":
+                        if (loss - target_loss) ** 2 > (old_loss - target_loss) ** 2:
+                            t += 5
+                        break
+                    status = "smaller"
+                    t += 5
+                    old_loss = loss
+                else:
+                    if status == "smaller":
+                        if (loss - target_loss) ** 2 > (old_loss - target_loss) ** 2:
+                            t -= 5
+                        break
+                    status = "larger"
+                    t -= 5
+                    old_loss = loss
+
             # 计算最合适的line取值
             line1, line2, line3 = optimize_lines(t, p, cost)
-
             line1 += s + a4
             line2 += s + a4 + a5
             line3 += s + a4 + a5 + am
             line1 = 5 * round(line1/5)
             line2 = 5 * round(line2/5)
-            # line3 = 5 * round(line3/5)
-            print(line1,line2,line3,row[col[typ]])
-            cost = sum_cost(line1 - s - a4, line2 - s - a4 - a5, line3 - s - a4 - a5 - am, t, p, cost)
-            ws.cell(row=i, column=col[typ], value=line3)
+            loss = sum_cost(line1 - s - a4, line2 - s - a4 - a5, line3 - s - a4 - a5 - am, t, p, cost)
+            print(t+s+f,line3,line2,line1,loss)
+            ws.cell(row=i, column=col[typ]+1, value=t+s+f)
+            ws.cell(row=i, column=col[typ]+0, value=line3)
             ws.cell(row=i, column=col[typ]-1, value=line2)
             ws.cell(row=i, column=col[typ]-2, value=line1)
-            ws.cell(row=i, column=col[typ]+2, value=round(cost/10000))
+            ws.cell(row=i, column=col[typ]+2, value=round(loss/10000))
 
     wb.save(file_path)
 

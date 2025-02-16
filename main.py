@@ -6,7 +6,6 @@ from moon_line import *
 
 #write_outline(outline)
 #write_data()
-#write_sun_line()
-
+write_sun_line()
 write_moon_line()
 

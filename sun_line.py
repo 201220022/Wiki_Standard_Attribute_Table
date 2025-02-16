@@ -8,18 +8,17 @@ def write_outline(outline):
     file_path = "属性表.xlsx"
     wb = openpyxl.load_workbook(file_path)
     sheet = wb.active
-    header_row = 3
     for i, row_data in enumerate(outline):
-        sheet.cell(row=i+header_row, column=1, value=row_data[0])
-        sheet.cell(row=i+header_row, column=2, value=row_data[1])
-        sheet.cell(row=i+header_row, column=3, value=row_data[2])
+        sheet.cell(row=i+first_row, column=1, value=row_data[0])
+        sheet.cell(row=i+first_row, column=2, value=row_data[1])
+        sheet.cell(row=i+first_row, column=3, value=row_data[2])
     wb.save(file_path)
 
 # 获取转职加成
 def get_fixed_attr(job, attr_index):
     wb = openpyxl.load_workbook("转职加成.xlsx", data_only=True)
     ws = wb.active
-    for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+    for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
         if row[0] == job:
             fixed_attr = [
                 row[1+attr_index],
@@ -106,7 +105,7 @@ def get_variable_attr(model, attr_index):
     # 统计模型初始值
     jobs = []
     cnt = 0
-    for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+    for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
         if row[0] == model:
             if row[1] not in jobs:
                 jobs.append(row[1])
@@ -117,7 +116,7 @@ def get_variable_attr(model, attr_index):
     # 估计模型成长
     for job in jobs:
         fixed_attr = get_fixed_attr(job, attr_index)[0]
-        for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+        for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
             if row[0] == model and row[1] == job:
                 data.append((row[18 + attr_index] - fixed_attr))
                 data2.append((row[18 + attr_index] - fixed_attr) ** 2)
@@ -135,7 +134,7 @@ def write_data():
     file_path = "属性表.xlsx"
     wb = openpyxl.load_workbook(file_path)
     ws = wb.active
-    for i, row in enumerate(ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True), start=3):
+    for i, row in enumerate(ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True), start=first_row):
         print("正在统计: " + row[2] + " -> " + row[0])
         attr_index = 0 if row[1] == "力" else 1 if row[1] == "魔" else 2 if row[1] == "技" else 3 if row[1] == "速" else 4 if row[1] == "体" else 5
         variable_attr = get_variable_attr(row[2], attr_index)  
@@ -151,7 +150,7 @@ def write_sun_line():
     file_path = "属性表.xlsx"
     wb = openpyxl.load_workbook(file_path)
     ws = wb.active
-    for i, row in enumerate(ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True), start=3):
+    for i, row in enumerate(ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True), start=3):
         print("计算日10线: " + row[2] + " -> " + row[0])
         s = float(row[col["初始"]])
         m = float(row[col["期望"]]) * 293
@@ -159,7 +158,7 @@ def write_sun_line():
         f = float(row[col["总计"]])
         ws.cell(row=i, column=col["一般"]+1, value=5 * round((s + f + norm.ppf(1-0.1,      loc=m, scale=v**0.5)) / 5))
         ws.cell(row=i, column=col["极品"]+1, value=5 * round((s + f + norm.ppf(1-0.01,     loc=m, scale=v**0.5)) / 5))
-        ws.cell(row=i, column=col["大极"]+1, value=5 * round((s + f + norm.ppf(1-0.0001,   loc=m, scale=v**0.5)) / 5))
+        ws.cell(row=i, column=col["大极"]+1, value=5 * round((s + f + norm.ppf(1-0.0002,   loc=m, scale=v**0.5)) / 5))
         ws.cell(row=i, column=col["镇堡"]+1, value=5 * round((s + f + norm.ppf(1-0.000001, loc=m, scale=v**0.5)) / 5))
     wb.save(file_path)
 
@@ -167,12 +166,12 @@ def count_model():
     models = []
     wb = openpyxl.load_workbook("统计表.xlsx", data_only=True)
     ws = wb.active
-    for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+    for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
         if row[0] not in models:
             models.append(row[0])
     for model in models:
         cnt = 0
-        for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+        for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
             if row[0] == model:
                 cnt += 1
         print(model, " ", cnt)
