@@ -197,12 +197,12 @@ def write_moon_line():
         for typ in ["一般", "极品", "大极", "镇堡"]:
             # 日十减去初始和转职部分
             t = row[col[typ]] - s - f
-            target_loss = 3000000 if typ == "一般" else 10000000 if typ == "极品"  else 500000000 if typ == "大极" else 50000000000
+            target_loss = 3000000 if typ == "一般" else 10000000 if typ == "极品"  else 400000000 if typ == "大极" else 100000000000
             # 分情况应用cost
             cost = [52354, 16206, 293096, 928400]
             if typ == "一般":
                 cost[0] = 85144
-            if row[col["职业"]] in ["传奇法师", "圣龙将军", "狂战神", "烈枪侠", "教宗", "夜莺"]:
+            if row[col["职业"]] in ["传奇法师", "圣龙将军", "狂战神", "圣枪侠", "教宗", "夜莺", "毁灭者"]:
                 cost[2] = 226880
             old_loss = 0
             status = ""
@@ -221,18 +221,18 @@ def write_moon_line():
                 if loss < target_loss:
                     if status == "larger":
                         if (loss - target_loss) ** 2 > (old_loss - target_loss) ** 2:
-                            t += 5
+                            t += 1
                         break
                     status = "smaller"
-                    t += 5
+                    t += 1
                     old_loss = loss
                 else:
                     if status == "smaller":
                         if (loss - target_loss) ** 2 > (old_loss - target_loss) ** 2:
-                            t -= 5
+                            t -= 1
                         break
                     status = "larger"
-                    t -= 5
+                    t -= 1
                     old_loss = loss
 
             # 计算最合适的line取值
@@ -240,8 +240,8 @@ def write_moon_line():
             line1 += s + a4
             line2 += s + a4 + a5
             line3 += s + a4 + a5 + am
-            line1 = 5 * round(line1/5)
-            line2 = 5 * round(line2/5)
+            #line1 = 5 * round(line1/5)
+            #line2 = 5 * round(line2/5)
             loss = sum_cost(line1 - s - a4, line2 - s - a4 - a5, line3 - s - a4 - a5 - am, t, p, cost)
             print(t+s+f,line3,line2,line1,loss)
             ws.cell(row=i, column=col[typ]+1, value=t+s+f)
