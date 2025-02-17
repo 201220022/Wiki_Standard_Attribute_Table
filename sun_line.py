@@ -105,7 +105,8 @@ def get_variable_attr(model, attr_index):
     # 统计模型初始值
     jobs = []
     cnt = 0
-    for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
+    for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
+        #print(row[0], model)
         if row[0] == model:
             if row[1] not in jobs:
                 jobs.append(row[1])
@@ -116,7 +117,7 @@ def get_variable_attr(model, attr_index):
     # 估计模型成长
     for job in jobs:
         fixed_attr = get_fixed_attr(job, attr_index)[0]
-        for row in ws.iter_rows(min_row=first_row, max_row=ws.max_row, values_only=True):
+        for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
             if row[0] == model and row[1] == job:
                 data.append((row[18 + attr_index] - fixed_attr))
                 data2.append((row[18 + attr_index] - fixed_attr) ** 2)
